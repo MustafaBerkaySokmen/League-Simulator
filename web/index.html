@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Insider League Predictor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1975/1975643.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Roboto', Arial, sans-serif; background: #f4f6fa; }
+    .navbar { background: linear-gradient(90deg, #0d6efd 60%, #0a58ca 100%); }
+    .navbar-brand { font-weight: 700; font-size: 1.5rem; letter-spacing: 1px; }
+    .logo { height: 40px; margin-right: 10px; }
+    .card { border-radius: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .card-header { font-weight: 500; font-size: 1.1rem; background: #f8f9fa; border-bottom: 1px solid #e9ecef; }
+    .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
+    .table thead th { background: #e9ecef; }
+    .table-hover tbody tr:hover { background: #f1f3f7; }
+    .footer { color: #888; font-size: 0.95em; margin-top: 2em; text-align: center; }
+    .badge-champ { background: #ffc107; color: #212529; font-size: 0.95em; }
+    .alert-info { background: #e7f1ff; color: #084298; border: none; }
+    .powered-by { font-size: 0.95em; color: #888; }
+    .form-label { font-weight: 500; }
+    .form-select, .form-control { border-radius: 0.5rem; }
+    .sim-section { background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03); padding: 1.5rem; margin-bottom: 2rem; }
+    .sim-section h6 { font-weight: 600; margin-top: 1.5rem; }
+    .sim-section ul { padding-left: 1.2em; }
+    .sim-section li { margin-bottom: 0.2em; }
+    .table-sm th, .table-sm td { padding: 0.35rem 0.5rem; }
+    @media (max-width: 767px) {
+      .navbar-brand { font-size: 1.1rem; }
+      .sim-section { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark shadow-sm mb-4 sticky-top" id="mainNavbar">
+    <div class="container-lg">
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <img src="https://cdn-icons-png.flaticon.com/512/1975/1975643.png" class="logo" alt="Logo">
+        Insider League Predictor
+      </a>
+      <div class="ms-auto d-flex align-items-center">
+        <button class="btn btn-outline-light btn-sm me-2" onclick="showAbout()" title="About this project"><i class="bi bi-info-circle"></i> About</button>
+        <button class="btn btn-outline-light btn-sm" id="darkModeToggle" onclick="toggleDarkMode()" title="Toggle dark mode"><i class="bi bi-moon"></i></button>
+      </div>
+    </div>
+  </nav>
+  <div class="container-lg">
+    <ul class="nav nav-tabs mb-4" id="mainTabs">
+      <li class="nav-item">
+        <a class="nav-link active" id="artificialTab" href="#" onclick="showPage('artificial')">Artificial League</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="realTab" href="#" onclick="showPage('real')">Real League</a>
+      </li>
+    </ul>
+    <div id="artificialPage">
+      <!-- Artificial League Section -->
+      <div id="errorAlert" class="alert alert-danger d-none" role="alert"></div>
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header">Start New League</div>
+            <div class="card-body">
+              <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">
+                  <label for="teamCount" class="form-label" data-bs-toggle="tooltip" title="Number of teams in the league (must be even)">Number of teams (even):</label>
+                </div>
+                <div class="col-auto">
+                  <input id="teamCount" type="number" class="form-control form-control-sm" value="4" min="2" step="2">
+                </div>
+                <div class="col-auto">
+                  <label for="initType" class="form-label" data-bs-toggle="tooltip" title="How to assign team strengths">Initialization:</label>
+                </div>
+                <div class="col-auto">
+                  <select id="initType" class="form-select form-select-sm">
+                    <option value="random">Random</option>
+                    <option value="homogeneous">Homogeneous</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <button class="btn btn-primary btn-sm" onclick="startLeague()">Start League</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header">Championship Probability</div>
+            <div class="card-body">
+              <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">
+                  <label for="model" class="form-label" data-bs-toggle="tooltip" title="Choose the prediction model">Model:</label>
+                </div>
+                <div class="col-auto">
+                  <select id="model" class="form-select form-select-sm">
+                    <option value="poisson">Poisson</option>
+                    <option value="elo">Elo</option>
+                    <option value="bt">Bradley-Terry</option>
+                    <option value="logistic">Logistic</option>
+                    <option value="bivariate">Bivariate Poisson</option>
+                    <option value="zip">Zero-Inflated Poisson</option>
+                    <option value="mlp">MLP Neural Net</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label for="sims" class="form-label" data-bs-toggle="tooltip" title="Number of Monte Carlo simulations">Sims:</label>
+                </div>
+                <div class="col-auto">
+                  <input id="sims" type="number" class="form-control form-control-sm" value="5000" min="1" style="display:none;" readonly />
+                  <span class="form-text">5000</span>
+                </div>
+                <div class="col-auto">
+                  <button class="btn btn-success btn-sm" onclick="updateProbabilities()">Run</button>
+                </div>
+                <div class="col-auto">
+                  <button class="btn btn-outline-secondary btn-sm" onclick="downloadCSV('standings')" title="Download standings as CSV"><i class="bi bi-download"></i></button>
+                </div>
+              </div>
+              <canvas id="chart" style="max-width:100%; margin-top:20px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header">Simulate Future Weeks</div>
+            <div class="card-body">
+              <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">
+                  <label for="simWeeks" class="form-label" data-bs-toggle="tooltip" title="How many weeks to simulate ahead">Weeks to simulate:</label>
+                </div>
+                <div class="col-auto">
+                  <input id="simWeeks" type="number" class="form-control form-control-sm" value="1" min="1" />
+                </div>
+                <div class="col-auto">
+                  <button class="btn btn-warning btn-sm" onclick="runSimulation()">Simulate</button>
+                </div>
+              </div>
+              <div id="simResults" class="mt-3 sim-section"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header">Current Standings</div>
+            <div class="card-body">
+              <div class="mb-2 d-flex align-items-center">
+                <input id="teamSearch" class="form-control form-control-sm me-2" style="max-width:200px;" placeholder="Search team..." oninput="filterStandings()">
+                <span class="ms-auto text-muted" id="standingsVersion"></span>
+              </div>
+              <div class="collapse show" id="standingsCollapse">
+                <h6>Standings</h6>
+                <div class="table-responsive">
+                  <table id="standings" class="table table-hover table-striped table-bordered align-middle text-center table-sm sortable">
+                    <thead class="table-light">
+                      <tr>
+                        <th onclick="sortTable(0)">Team <i class="bi bi-caret-down-fill"></i></th><th onclick="sortTable(1)">P</th><th onclick="sortTable(2)">W</th><th onclick="sortTable(3)">D</th><th onclick="sortTable(4)">L</th>
+                        <th onclick="sortTable(5)">GF</th><th onclick="sortTable(6)">GA</th><th onclick="sortTable(7)">GD</th><th onclick="sortTable(8)">Pts</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+              </div>
+              <button class="btn btn-outline-secondary btn-sm mt-2" onclick="downloadCSV('standings')"><i class="bi bi-download"></i> Download CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="realPage" style="display:none;">
+      <!-- Real League Section -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-12">
+          <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+              <span>Real Data <span class="badge bg-info text-dark ms-2">Live Leagues</span></span>
+              <span class="powered-by">Powered by <a href="https://www.football-data.org/" target="_blank">football-data.org</a></span>
+            </div>
+            <div class="card-body">
+              <div class="row g-2 align-items-center mb-2">
+                <div class="col-auto">
+                  <label for="realLeague" class="form-label">Select League:</label>
+                </div>
+                <div class="col-auto">
+                  <select id="realLeague" class="form-select form-select-sm" style="min-width:200px"></select>
+                </div>
+                <div class="col-auto">
+                  <button class="btn btn-info btn-sm" onclick="loadRealLeague()">Load</button>
+                </div>
+              </div>
+              <div id="realLeagueInfo" class="mt-3"></div>
+              <div id="realSimControls"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="footer mt-5">
+      <hr>
+      <small>&copy; 2025 Insider League Technologies. All rights reserved. | <a href="#" onclick="showAbout()">About</a> | <a href="https://github.com/yourcompany/insider-league" target="_blank">GitHub</a></small>
+      <div class="text-muted mt-1" style="font-size:0.9em;">v1.0 &mdash; Last updated: May 29, 2025</div>
+    </footer>
+  </div>
+  <div id="loadingSpinner" class="spinner-border text-primary" style="display:none; position:fixed; top:50%; left:50%; z-index:2000;" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <!-- About Modal -->
+  <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="aboutModalLabel">About Insider League Predictor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>This project lets you simulate and predict football leagues using both artificial and real data. It features multiple models (Poisson, Elo, AI, etc.), real-time data from football-data.org, and advanced analytics. Built with Go, PostgreSQL, and Bootstrap 5.</p>
+          <ul>
+            <li>Open source: <a href="https://github.com/yourcompany/insider-league" target="_blank">GitHub</a></li>
+            <li>Docs: <a href="#" target="_blank">Documentation</a></li>
+            <li>Contact: <a href="mailto:info@yourcompany.com">info@yourcompany.com</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function showPage(page) {
+      document.getElementById('artificialPage').style.display = (page === 'artificial') ? '' : 'none';
+      document.getElementById('realPage').style.display = (page === 'real') ? '' : 'none';
+      document.getElementById('artificialTab').classList.toggle('active', page === 'artificial');
+      document.getElementById('realTab').classList.toggle('active', page === 'real');
+    }
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    let chart;
+
+    function showSpinner(show) {
+      document.getElementById('loadingSpinner').style.display = show ? 'inline-block' : 'none';
+    }
+    function showError(msg) {
+      const alert = document.getElementById('errorAlert');
+      alert.textContent = msg;
+      alert.style.display = msg ? 'block' : 'none';
+    }
+
+    function renderTable(rows) {
+      const body = document.querySelector('#standings tbody');
+      body.innerHTML = '';
+      if (!rows || !rows.length) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="9" class="text-muted">No data</td>`;
+        body.appendChild(tr);
+        return;
+      }
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.team_name}</td>
+          <td>${r.played}</td>
+          <td>${r.won}</td>
+          <td>${r.drawn}</td>
+          <td>${r.lost}</td>
+          <td>${r.goals_for}</td>
+          <td>${r.goals_against}</td>
+          <td>${r.goal_diff}</td>
+          <td>${r.points}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function startLeague() {
+      const n = parseInt(document.getElementById('teamCount').value, 10);
+      const type = document.getElementById('initType').value;
+      showError('');
+      showSpinner(true);
+      if (isNaN(n) || n < 2 || n % 2 !== 0) {
+        showSpinner(false);
+        return showError('Please enter an even number ≥ 2');
+      }
+      fetch(`/reset?teams=${n}&type=${type}`, { method: 'POST' })
+        .then(r => {
+          showSpinner(false);
+          if (!r.ok) return r.text().then(t => { throw new Error(t) });
+          return r.json();
+        })
+        .then(data => {
+          renderTable(data.table || data);
+          document.getElementById('simResults').innerHTML = '';
+          updateProbabilities();
+        })
+        .catch(err => {
+          showSpinner(false);
+          showError('Reset error: ' + err.message);
+        });
+    }
+
+    function updateProbabilities() {
+      const model = document.getElementById('model').value;
+      const sims  = parseInt(document.getElementById('sims').value, 10) || 0;
+      showError('');
+      showSpinner(true);
+      fetch(`/predict?model=${model}&sims=${sims}`)
+        .then(r => {
+          showSpinner(false);
+          if (!r.ok) return r.text().then(t => { throw new Error(t) });
+          return r.json();
+        })
+        .then(data => {
+          const labels = Object.keys(data.probs);
+          const values = labels.map(k => data.probs[k] * 100);
+          if (chart) chart.destroy();
+          chart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: data.model, data: values, backgroundColor: '#0d6efd' }] },
+            options: {
+              plugins: {
+                legend: { display: true },
+                title: { display: true, text: 'Championship Probability (%)' }
+              },
+              scales: { y: { beginAtZero:true, max:100 } }
+            }
+          });
+        })
+        .catch(err => {
+          showSpinner(false);
+          showError('Prediction error: ' + err.message);
+        });
+    }
+
+    function runSimulation() {
+      const w = parseInt(document.getElementById('simWeeks').value, 10) || 1;
+      showError('');
+      showSpinner(true);
+      fetch(`/simulate/weeks?weeks=${w}`, { method: 'POST' })
+        .then(r => {
+          showSpinner(false);
+          if (!r.ok) return r.text().then(t => { throw new Error(t) });
+          return r.json();
+        })
+        .then(data => {
+          // Fixtures
+          const c = document.getElementById('simResults');
+          let h = '';
+          data.simulated.forEach(wk => {
+            h += `<h5 class="mt-3">Week ${wk.week}</h5><ul class="list-group mb-3">`;
+            wk.fixtures.forEach(fx => {
+              h += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><b>Team ${fx.home_team_id}</b> <span class="text-muted">vs</span> <b>Team ${fx.away_team_id}</b></span>
+                <span class="fw-bold text-primary">${fx.home_goals} : ${fx.away_goals}</span>
+              </li>`;
+            });
+            h += `</ul>`;
+          });
+          c.innerHTML = h;
+
+          // Standings & Chart
+          renderTable(data.table);
+          updateProbabilities();
+        })
+        .catch(err => {
+          showSpinner(false);
+          showError('Simulation error: ' + err.message);
+        });
+    }
+
+    function loadRealLeagues() {
+      fetch('/real/leagues')
+        .then(r => r.json())
+        .then(data => {
+          const select = document.getElementById('realLeague');
+          select.innerHTML = '';
+          if (data.competitions) {
+            data.competitions.forEach(lg => {
+              const opt = document.createElement('option');
+              opt.value = lg.code || lg.id;
+              opt.textContent = `${lg.name} (${lg.area.name})`;
+              select.appendChild(opt);
+            });
+            if (select.options.length > 0) {
+              select.selectedIndex = 0;
+              loadRealLeague();
+            }
+          }
+        })
+        .catch(err => {
+          showError('Failed to load real leagues: ' + err.message);
+        });
+    }
+    function loadRealLeague() {
+      const select = document.getElementById('realLeague');
+      const leagueId = select.value;
+      const infoDiv = document.getElementById('realLeagueInfo');
+      infoDiv.innerHTML = '<em>Loading...</em>';
+      // Fetch standings
+      fetch(`/real/standings?league=${leagueId}`)
+        .then(r => r.json())
+        .then(data => {
+          let standingsHtml = '<h6>Standings</h6>';
+          let teamMap = {};
+          let maxWeek = 0;
+          if (data.standings && data.standings.length > 0) {
+            const table = data.standings[0].table;
+            table.forEach(row => {
+              teamMap[row.team.id] = row.team.name;
+              if (row.playedGames > maxWeek) maxWeek = row.playedGames;
+            });
+            standingsHtml += '<table class="table table-sm table-bordered"><thead><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>';
+            table.forEach(row => {
+              standingsHtml += `<tr><td>${row.team.name}</td><td>${row.playedGames}</td><td>${row.won}</td><td>${row.draw}</td><td>${row.lost}</td><td>${row.goalsFor}</td><td>${row.goalsAgainst}</td><td>${row.goalDifference}</td><td>${row.points}</td></tr>`;
+            });
+            standingsHtml += '</tbody></table>';
+          } else {
+            standingsHtml += '<div class="text-muted">No standings data.</div>';
+          }
+          // Show max week info at the top
+          infoDiv.innerHTML = `<div class='alert alert-secondary py-1 mb-2' id='maxWeekInfo' style='font-size:0.95em;'>Max week for this league: <b>${maxWeek}</b></div>`;
+          window._realLeagueTeamMap = teamMap;
+          window._realLeagueInfoCache = standingsHtml + '<div id="realFixtures"></div>';
+          infoDiv.innerHTML += '<div id="realFixtures"></div>';
+          loadRealFixtures(leagueId);
+          renderRealSimControls(leagueId);
+        })
+        .catch(err => {
+          infoDiv.innerHTML = '<span class="text-danger">Failed to load standings: ' + err.message + '</span>';
+        });
+    }
+    function loadRealFixtures(leagueId) {
+      const fixturesDiv = document.getElementById('realFixtures');
+      fixturesDiv.innerHTML = '<em>Loading fixtures...</em>';
+      fetch(`/real/fixtures?league=${leagueId}`)
+        .then(r => r.json())
+        .then(data => {
+          let fixturesHtml = '<h6>Upcoming Fixtures</h6>';
+          if (data.matches && data.matches.length > 0) {
+            fixturesHtml += '<ul>';
+            data.matches.slice(0, 10).forEach(match => {
+              fixturesHtml += `<li>${match.utcDate.slice(0,10)}: ${match.homeTeam.name} vs ${match.awayTeam.name}</li>`;
+            });
+            fixturesHtml += '</ul>';
+          } else {
+            fixturesHtml += '<div class="text-muted">No upcoming fixtures.</div>';
+          }
+          window._realLeagueInfoCache += fixturesHtml;
+          fixturesDiv.innerHTML = '';
+        })
+        .catch(err => {
+          fixturesDiv.innerHTML = '<span class="text-danger">Failed to load fixtures: ' + err.message + '</span>';
+        });
+    }
+    function renderRealSimControls(leagueId) {
+      const controlsDiv = document.getElementById('realSimControls');
+      controlsDiv.innerHTML = `
+        <div class="row g-2 align-items-center mb-2">
+          <div class="col-auto">
+            <label for="realModel" class="col-form-label">Model:</label>
+          </div>
+          <div class="col-auto">
+            <select id="realModel" class="form-select">
+              <option value="poisson">Poisson</option>
+              <option value="elo">Elo</option>
+              <option value="bt">Bradley-Terry</option>
+              <option value="logistic">Logistic</option>
+              <option value="bivariate">Bivariate Poisson</option>
+              <option value="zip">Zero-Inflated Poisson</option>
+              <option value="mlp">MLP Neural Net</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <label for="realSims" class="col-form-label">Sims:</label>
+          </div>
+          <div class="col-auto">
+            <input id="realSims" type="number" class="form-control" value="5000" min="1" style="display:none;" readonly />
+            <span class="form-text">5000</span>
+          </div>
+          <div class="col-auto">
+            <label for="realWeeks" class="col-form-label">Weeks to simulate:</label>
+          </div>
+          <div class="col-auto">
+            <input id="realWeeks" type="number" class="form-control" value="1" min="1" />
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-success" onclick="runRealSimulation('${leagueId}')">Simulate</button>
+          </div>
+        </div>
+        <canvas id="realChart" style="max-width:100%; margin-top:20px;"></canvas>
+        <div id="realSimResults"></div>
+      `;
+    }
+    function runRealSimulation(leagueId) {
+      const model = document.getElementById('realModel').value;
+      const sims = parseInt(document.getElementById('realSims').value, 10) || 0;
+      const week = parseInt(document.getElementById('realWeeks').value, 10) || 1;
+      showError('');
+      showSpinner(true);
+      // Simulate weeks
+      fetch(`/real/simulate?league=${leagueId}&week=${week}`)
+        .then(r => {
+          if (!r.ok) return r.text().then(t => { throw new Error(t) });
+          return r.json();
+        })
+        .then(data => {
+          // Fixtures
+          const c = document.getElementById('realSimResults');
+          let h = '';
+          if (!data.realResults || !Array.isArray(data.realResults) || data.realResults.length === 0) {
+            c.innerHTML = '<div class="text-muted">No simulation results.</div>';
+            return;
+          }
+          // Build a map from team ID to name
+          let teamMap = window._realLeagueTeamMap || {};
+          if (data.teams && Array.isArray(data.teams)) {
+            data.teams.forEach(t => { teamMap[t.ID] = t.Name; });
+          }
+          h += `<h5 class="mt-3">Finished League Results</h5>`;
+          data.realResults.forEach(wk => {
+            h += `<h6>Week ${wk.week}</h6><ul class="list-group mb-3">`;
+            if (wk.fixtures && Array.isArray(wk.fixtures)) {
+              wk.fixtures.forEach(fx => {
+                h += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                  <span><b>${teamMap[fx.home_team_id] || fx.home_team_id}</b> <span class="text-muted">vs</span> <b>${teamMap[fx.away_team_id] || fx.away_team_id}</b></span>
+                  <span class="fw-bold text-primary">${fx.home_goals} : ${fx.away_goals}</span>
+                </li>`;
+              });
+            }
+            h += `</ul>`;
+          });
+          // Render the table after the simulated week
+          if (data.table && Array.isArray(data.table)) {
+            h += `<h6>Standings after week ${week}</h6>`;
+            h += '<table class="table table-sm table-bordered"><thead><tr><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>';
+            data.table.forEach(row => {
+              h += `<tr><td>${row.team_name}</td><td>${row.played}</td><td>${row.won}</td><td>${row.drawn}</td><td>${row.lost}</td><td>${row.goals_for}</td><td>${row.goals_against}</td><td>${row.goal_diff}</td><td>${row.points}</td></tr>`;
+            });
+            h += '</tbody></table>';
+          }
+          c.innerHTML = h;
+          if (data.actualChampion) {
+            c.innerHTML += `<h2 class="mt-4 mb-3 text-center text-success">Actual Champion and Finished Standings</h2>`;
+            c.innerHTML += `<div class="alert alert-info mt-2">Actual Champion: <b>${data.actualChampion}</b></div>`;
+          }
+          // Probabilities
+          fetch(`/real/predict?league=${leagueId}&model=${model}&sims=${sims}&week=${week}`)
+            .then(r => {
+              showSpinner(false);
+              if (!r.ok) return r.text().then(t => { throw new Error(t) });
+              return r.json();
+            })
+            .then(data => {
+              const teamNames = data.teamNames || {};
+              const ids = Object.keys(data.probs);
+              const labels = ids.map(k => teamNames[k] || k);
+              const values = ids.map(k => data.probs[k] * 100);
+              const ctx2 = document.getElementById('realChart').getContext('2d');
+              if (window.realChartObj) window.realChartObj.destroy();
+              window.realChartObj = new Chart(ctx2, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: data.model, data: values, backgroundColor: '#198754' }] },
+                options: {
+                  plugins: {
+                    legend: { display: true },
+                    title: { display: true, text: 'Championship Probability (%)' }
+                  },
+                  scales: { y: { beginAtZero:true, max:100 } }
+                }
+              });
+              // Move finished league results and upcoming matches below actual champion
+              const infoDiv = document.getElementById('realLeagueInfo');
+              if (infoDiv && window._realLeagueInfoCache) {
+                c.innerHTML += window._realLeagueInfoCache;
+              }
+            })
+            .catch(err => {
+              showSpinner(false);
+              showError('Prediction error: ' + err.message);
+            });
+        })
+        .catch(err => {
+          showSpinner(false);
+          showError('Simulation error: ' + err.message);
+        });
+    }
+
+    // On first load, start a 4-team league automatically
+    window.onload = () => {
+      showPage('artificial');
+      startLeague();
+      loadRealLeagues();
+    };
+
+    // Dark mode toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle('bg-dark');
+      document.body.classList.toggle('text-light');
+      document.getElementById('mainNavbar').classList.toggle('navbar-dark');
+      document.getElementById('mainNavbar').classList.toggle('navbar-light');
+      document.getElementById('mainNavbar').classList.toggle('bg-primary');
+      document.getElementById('mainNavbar').classList.toggle('bg-dark');
+      document.getElementById('mainTabs').classList.toggle('nav-tabs-dark');
+    }
+    // About modal
+    function showAbout() {
+      var modal = new bootstrap.Modal(document.getElementById('aboutModal'));
+      modal.show();
+    }
+    // Tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    });
+    // Standings search
+    function filterStandings() {
+      const input = document.getElementById('teamSearch').value.toLowerCase();
+      const rows = document.querySelectorAll('#standings tbody tr');
+      rows.forEach(row => {
+        row.style.display = row.children[0].textContent.toLowerCase().includes(input) ? '' : 'none';
+      });
+    }
+    // Download CSV
+    function downloadCSV(tableId) {
+      let csv = '';
+      const table = document.getElementById(tableId);
+      if (!table) return;
+      for (let row of table.rows) {
+        let rowData = [];
+        for (let cell of row.cells) rowData.push('"' + cell.innerText.replace(/"/g, '""') + '"');
+        csv += rowData.join(',') + '\n';
+      }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'standings.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+    // Sortable table
+    function sortTable(n) {
+      const table = document.getElementById('standings');
+      let switching = true, dir = 'desc', switchcount = 0;
+      while (switching) {
+        switching = false;
+        let rows = table.rows;
+        for (let i = 1; i < rows.length - 1; i++) {
+          let shouldSwitch = false;
+          let x = rows[i].getElementsByTagName('TD')[n];
+          let y = rows[i + 1].getElementsByTagName('TD')[n];
+          let xVal = isNaN(x.innerHTML) ? x.innerHTML.toLowerCase() : parseFloat(x.innerHTML);
+          let yVal = isNaN(y.innerHTML) ? y.innerHTML.toLowerCase() : parseFloat(y.innerHTML);
+          if ((dir === 'asc' && xVal > yVal) || (dir === 'desc' && xVal < yVal)) {
+            shouldSwitch = true;
+            break;
+          }
+        }
+        if (shouldSwitch) {
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          switchcount++;
+        } else {
+          if (switchcount === 0 && dir === 'desc') {
+            dir = 'asc';
+            switching = true;
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
