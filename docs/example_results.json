@@ -1,0 +1,18 @@
+{
+  "table": [
+    {"team_id": 1, "team_name": "Team A", "played": 6, "won": 4, "drawn": 1, "lost": 1, "goals_for": 12, "goals_against": 7, "goal_diff": 5, "points": 13},
+    {"team_id": 2, "team_name": "Team B", "played": 6, "won": 3, "drawn": 2, "lost": 1, "goals_for": 10, "goals_against": 8, "goal_diff": 2, "points": 11},
+    {"team_id": 3, "team_name": "Team C", "played": 6, "won": 2, "drawn": 1, "lost": 3, "goals_for": 8, "goals_against": 10, "goal_diff": -2, "points": 7},
+    {"team_id": 4, "team_name": "Team D", "played": 6, "won": 1, "drawn": 0, "lost": 5, "goals_for": 5, "goals_against": 10, "goal_diff": -5, "points": 3}
+  ],
+  "predictions": {
+    "model": "Poisson",
+    "sims": 5000,
+    "probs": {
+      "1": 0.55,
+      "2": 0.30,
+      "3": 0.10,
+      "4": 0.05
+    }
+  }
+}

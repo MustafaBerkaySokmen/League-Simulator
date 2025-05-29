@@ -1,0 +1,204 @@
+{
+  "info": {
+    "_postman_id": "b1e1e1e1-1234-5678-9abc-def012345678",
+    "name": "League Simulator API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get League Table",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/table",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["table"]
+        }
+      }
+    },
+    {
+      "name": "Simulate Next Week",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/simulate/week",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["simulate", "week"]
+        }
+      }
+    },
+    {
+      "name": "Simulate N Weeks",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/simulate/weeks?weeks=2",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["simulate", "weeks"],
+          "query": [{"key": "weeks", "value": "2"}]
+        }
+      }
+    },
+    {
+      "name": "Simulate All Remaining Matches",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/simulate/all",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["simulate", "all"]
+        }
+      }
+    },
+    {
+      "name": "Predict Championship Probabilities",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/predict?model=poisson&sims=5000",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["predict"],
+          "query": [
+            {"key": "model", "value": "poisson"},
+            {"key": "sims", "value": "5000"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Reset League",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/reset?teams=4&type=random",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["reset"],
+          "query": [
+            {"key": "teams", "value": "4"},
+            {"key": "type", "value": "random"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Edit Match Result",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"}
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"week\": 3,\n  \"home_team_id\": 1,\n  \"away_team_id\": 2,\n  \"home_goals\": 2,\n  \"away_goals\": 2\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/edit_match",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["edit_match"]
+        }
+      }
+    },
+    {
+      "name": "List Real Leagues",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/real/leagues",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["real", "leagues"]
+        }
+      }
+    },
+    {
+      "name": "Get Real League Standings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/real/standings?league=PL",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["real", "standings"],
+          "query": [{"key": "league", "value": "PL"}]
+        }
+      }
+    },
+    {
+      "name": "Get Real League Fixtures",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/real/fixtures?league=PL",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["real", "fixtures"],
+          "query": [{"key": "league", "value": "PL"}]
+        }
+      }
+    },
+    {
+      "name": "Simulate Real League Weeks",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/real/simulate?league=PL&week=5",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["real", "simulate"],
+          "query": [
+            {"key": "league", "value": "PL"},
+            {"key": "week", "value": "5"}
+          ]
+        }
+      }
+    },
+    {
+      "name": "Predict Real League Outcomes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/real/predict?league=PL&model=poisson&sims=5000&week=5",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["real", "predict"],
+          "query": [
+            {"key": "league", "value": "PL"},
+            {"key": "model", "value": "poisson"},
+            {"key": "sims", "value": "5000"},
+            {"key": "week", "value": "5"}
+          ]
+        }
+      }
+    }
+  ]
+}

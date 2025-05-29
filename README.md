@@ -153,3 +153,8 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Contact
 For questions or contributions, open an issue or contact [Mustafa Berkay Sokmen](mailto:info@yourcompany.com).
+
+## Badges
+
+![Go Version](https://img.shields.io/badge/go-1.20%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
